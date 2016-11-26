@@ -1,9 +1,10 @@
-from .models import Event
+from .models import Event, Vote
 from rest_framework import serializers
 
 
 class EventSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
+    vote = serializers.IntegerField(read_only=True)
     title = serializers.CharField(required=True, allow_blank=False, max_length=20)
     content = serializers.CharField(required=True, allow_blank=True, max_length=65535)
     event_type = serializers.ChoiceField(choices=[0, 1], required=True, allow_blank=False)
@@ -17,3 +18,12 @@ class EventSerializer(serializers.Serializer):
 
         instance.save()
         return instance
+
+
+class VoteSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    event_id = serializers.IntegerField(required=True)
+    vote = serializers.ChoiceField(choices=[-1, 1], required=True)
+
+    def create(self, validated_data):
+        return Vote.objects.create(**validated_data)
