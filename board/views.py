@@ -1,0 +1,26 @@
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.renderers import JSONRenderer
+from rest_framework.parsers import JSONParser
+from rest_framework import viewsets
+from board.serializers import EventSerializer
+from .models import Event
+
+
+# Create your views here.
+
+class EventViewSet(viewsets.ModelViewSet):
+    query_set = Event.objects.all().order_by('-created_at')
+    serializer_class = EventSerializer
+
+
+class JSONResponse(HttpResponse):
+    def __int__(self, data, **kwargs):
+        content = JSONRenderer().render(data)
+        kwargs['content_type'] = 'application/json'
+        super().__init__(content, **kwargs)
+
+@csrf_exempt
+def event_list(request):
+    if request.method == 'GET':
+        event = Event
