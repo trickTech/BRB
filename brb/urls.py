@@ -17,7 +17,7 @@ from django.conf.urls import url, include
 from django.contrib import admin
 from rest_framework import routers
 
-
 urlpatterns = [
-    url(r'^', include('board.urls'))
+    url(r'^', include('board.urls')),
+    url(r'^', include('user.urls'))
 ]
