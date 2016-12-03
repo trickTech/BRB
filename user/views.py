@@ -3,7 +3,7 @@ import urllib.request
 from django.http import HttpResponse
 from django.shortcuts import render
 
-from .const import USER_ACCESS_URL
+from .user_const import USER_ACCESS_URL
 
 
 # Create your views here.

@@ -1,5 +1,4 @@
 from django.http import HttpResponse
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 from board.serializers import EventSerializer, VoteSerializer
@@ -15,22 +14,6 @@ def json_response(data, **kwargs):
     response = HttpResponse(content, content_type="application/json", **kwargs)
     return response
 
-
-def cross_site(func):
-    @functools.wraps(func)
-    def _wrapper(*args, **kwargs):
-        response = func(*args, **kwargs)
-        response["Access-Control-Allow-Origin"] = "*"
-        response["Access-Control-Allow-Methods"] = "POST, GET, PUT, DELETE, OPTIONS"
-        response["Access-Control-Allow-Credentials"] = True
-        response["Access-Control-Max-Age"] = '86400'
-        response["Access-Control-Allow-Headers"] = "X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept"
-        return response
-
-    return _wrapper
-
-
-@cross_site
 def event_list(request):
     if request.method == 'OPTIONS':
         return HttpResponse('', status=200)
@@ -48,7 +31,6 @@ def event_list(request):
         return json_response(serializer.errors, status=400)
 
 
-@cross_site
 def event_detail(request, pk):
     if request.method == 'OPTIONS':
         return HttpResponse('', status=200)
@@ -70,7 +52,6 @@ def event_detail(request, pk):
         return json_response(serializer.errors, status=400)
 
 
-@cross_site
 def vote(request, pk):
     if request.method == 'OPTIONS':
         return HttpResponse('', status=200)
