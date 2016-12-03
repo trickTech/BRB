@@ -1,18 +1,11 @@
 from django.http import HttpResponse
-from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 from board.serializers import EventSerializer, VoteSerializer
-import functools
+from brb.utils import json_response
 from .models import Event
 
 
 # Create your views here.
-
-
-def json_response(data, **kwargs):
-    content = JSONRenderer().render(data)
-    response = HttpResponse(content, content_type="application/json", **kwargs)
-    return response
 
 def event_list(request):
     if request.method == 'OPTIONS':
