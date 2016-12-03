@@ -3,6 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 from board.serializers import EventSerializer, VoteSerializer
+import functools
 from .models import Event
 
 
@@ -11,24 +12,28 @@ from .models import Event
 
 def json_response(data, **kwargs):
     content = JSONRenderer().render(data)
-    return HttpResponse(content, content_type="application/json", **kwargs)
+    response = HttpResponse(content, content_type="application/json", **kwargs)
+    return response
 
 
 def cross_site(func):
-    def add_cross_site(*args, **kwargs):
+    @functools.wraps(func)
+    def _wrapper(*args, **kwargs):
         response = func(*args, **kwargs)
-        if isinstance(response, HttpResponse):
-            response["Access-Control-Allow-Origin"] = "*"
-            response["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
-
+        response["Access-Control-Allow-Origin"] = "*"
+        response["Access-Control-Allow-Methods"] = "POST, GET, PUT, DELETE, OPTIONS"
+        response["Access-Control-Allow-Credentials"] = True
+        response["Access-Control-Max-Age"] = '86400'
+        response["Access-Control-Allow-Headers"] = "X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept"
         return response
 
-    return add_cross_site
+    return _wrapper
 
 
 @cross_site
-@csrf_exempt
 def event_list(request):
+    if request.method == 'OPTIONS':
+        return HttpResponse('', status=200)
     if request.method == 'GET':
         events = Event.objects.all()
         serializer = EventSerializer(events, many=True)
@@ -44,8 +49,9 @@ def event_list(request):
 
 
 @cross_site
-@csrf_exempt
 def event_detail(request, pk):
+    if request.method == 'OPTIONS':
+        return HttpResponse('', status=200)
     try:
         event = Event.objects.get(pk=pk)
     except Event.DoesNotExist:
@@ -65,8 +71,9 @@ def event_detail(request, pk):
 
 
 @cross_site
-@csrf_exempt
 def vote(request, pk):
+    if request.method == 'OPTIONS':
+        return HttpResponse('', status=200)
     if request.method == 'POST':
         try:
             event = Event.objects.get(pk=pk)
