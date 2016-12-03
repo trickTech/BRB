@@ -14,6 +14,19 @@ def json_response(data, **kwargs):
     return HttpResponse(content, content_type="application/json", **kwargs)
 
 
+def cross_site(func):
+    def add_cross_site(*args, **kwargs):
+        response = func(*args, **kwargs)
+        if isinstance(response, HttpResponse):
+            response["Access-Control-Allow-Origin"] = "*"
+            response["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
+
+        return response
+
+    return add_cross_site
+
+
+@cross_site
 @csrf_exempt
 def event_list(request):
     if request.method == 'GET':
@@ -30,6 +43,7 @@ def event_list(request):
         return json_response(serializer.errors, status=400)
 
 
+@cross_site
 @csrf_exempt
 def event_detail(request, pk):
     try:
@@ -50,6 +64,7 @@ def event_detail(request, pk):
         return json_response(serializer.errors, status=400)
 
 
+@cross_site
 @csrf_exempt
 def vote(request, pk):
     if request.method == 'POST':
