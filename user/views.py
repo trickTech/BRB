@@ -1,42 +1,51 @@
 import json
-import urllib.request
-from django.http import HttpResponse
 import binascii
-from .user_const import (
-    USER_ACCESS_URL,
-    APPID,
-    APPSECRET
-)
+import logging
 from Crypto.Cipher import AES
+from django.contrib import auth
 from brb.utils import (
     json_response,
     error_response,
 )
+from .user_const import (
+    APPID,
+    APPSECRET
+)
+from .models import User
+
+logger = logging.getLogger(__name__)
 
 
 # Create your views here.
 
-def callback_handler(request):
-    if request.method == "GET":
-        code = request.GET.get('code')
-        if not code:
-            return HttpResponse(status=404)
-        else:
-            try:
-                http_response = urllib.request.urlopen(USER_ACCESS_URL % code).read().decode('utf8')
-                data = json.loads(http_response)
-                return HttpResponse(str(data))
-            except Exception:
-                return HttpResponse("Net Error")
-    return HttpResponse(status=404)
-
-
-def auth(request):
+def auth_handler(request):
     if request.method == 'POST':
-        token = request.FORM.get('access_token')
-        if token is None:
-            return error_response('token not valid')
-        return json_response({'result': token})
+        info = request.POST.get('verify_request')
+        if info is None:
+            return error_response('data not valid')
+        try:
+            info = _decode_access_token(info)
+        except Exception as exc:
+            logger.warning("token invalid {}".format(info))
+            return error_response("authorization info failed")
+
+        if not info.get('visit_oauth'):
+            return error_response('auth fail')
+
+        user_info = info.get('visit_user')
+
+        yiban_id = user_info.get('userid')
+        nickname = user_info.get('usernick')
+        usersex = user_info.get('usersex')
+
+        user = User.objects.filter(yiban_id=yiban_id).first()
+
+        if not user:
+            user = User.objects.create(yiban_id=yiban_id, nickname=nickname, sex=usersex)
+
+        user = auth.login(request, user)
+        return json_response({'result': user})
+        # return json_response({'status': 'success'})
 
 
 def is_login(request):
@@ -44,14 +53,21 @@ def is_login(request):
     return json_response({'is_login': result})
 
 
-def _decode_access_token(token):
-    content = binascii.hexlify(token)
+def _decode_access_token(data):
+    data = binascii.unhexlify(data)
 
-    key = binascii.unhexlify(APPSECRET)
-    IV = APPID
-    mode = AES.MODE_CBC
+    aes = AES.new(APPSECRET, AES.MODE_CBC, IV=APPID)
+    origin_data = aes.decrypt(data)
+    origin_data = origin_data.decode()
+    # strip
+    origin_data = origin_data.replace('\x00', '')
+    try:
+        origin_data = json.loads(origin_data)
+    except Exception as exc:
+        raise exc
 
-    encryptor = AES.new(key, mode, IV=IV)
-    real_content = binascii.hexlify(encryptor.encrypt(content))
+    return origin_data
 
-    return real_content
+
+def debug(request):
+    return json_response({'session': request.session})
