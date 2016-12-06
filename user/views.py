@@ -4,7 +4,7 @@ import logging
 from Crypto.Cipher import AES
 from django.contrib import auth
 from brb.utils import (
-    json_response,
+    result_response,
     error_response,
 )
 from .user_const import (
@@ -44,13 +44,13 @@ def auth_handler(request):
             user = User.objects.create(yiban_id=yiban_id, nickname=nickname, sex=usersex)
 
         user = auth.login(request, user)
-        return json_response({'result': user})
+        return result_response({'result': user})
         # return json_response({'status': 'success'})
 
 
 def is_login(request):
     result = request.user.is_authenticated()
-    return json_response({'is_login': result})
+    return result_response({'is_login': result})
 
 
 def _decode_access_token(data):
@@ -70,4 +70,4 @@ def _decode_access_token(data):
 
 
 def debug(request):
-    return json_response({'session': request.session})
+    return result_response({'session': request.session})

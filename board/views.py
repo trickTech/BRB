@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 from rest_framework.parsers import JSONParser
 from board.serializers import EventSerializer, VoteSerializer
-from brb.utils import json_response
+from brb.utils import result_response
 from .models import Event
 
 
@@ -13,15 +13,15 @@ def event_list(request):
     if request.method == 'GET':
         events = Event.objects.all()
         serializer = EventSerializer(events, many=True)
-        return json_response(serializer.data)
+        return result_response(serializer.data)
 
     if request.method == 'POST':
         data = JSONParser().parse(request)
         serializer = EventSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
-            return json_response(serializer.data, status=201)
-        return json_response(serializer.errors, status=400)
+            return result_response(serializer.data, status=201)
+        return result_response(serializer.errors, status=400)
 
 
 def event_detail(request, pk):
@@ -34,15 +34,15 @@ def event_detail(request, pk):
 
     if request.method == 'GET':
         serializer = EventSerializer(event)
-        return json_response(serializer.data)
+        return result_response(serializer.data)
 
     elif request.method == 'PUT':
         data = JSONParser().parse(request)
         serializer = EventSerializer(event, data=data)
         if serializer.is_valid():
             serializer.save()
-            return json_response(serializer.data)
-        return json_response(serializer.errors, status=400)
+            return result_response(serializer.data)
+        return result_response(serializer.errors, status=400)
 
 
 def vote(request, pk):
@@ -60,7 +60,7 @@ def vote(request, pk):
             serializer.save()
             event.vote += serializer.data.get('vote')
             event.save()
-            return json_response(serializer.data)
-        return json_response(serializer.errors, status=400)
+            return result_response(serializer.data)
+        return result_response(serializer.errors, status=400)
 
     return HttpResponse(status=404)
