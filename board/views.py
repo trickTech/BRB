@@ -1,53 +1,37 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
+
+from rest_framework import status
 from rest_framework.parsers import JSONParser
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework import mixins
+from rest_framework import generics
+
 from board.serializers import EventSerializer, VoteSerializer
 from brb.utils import result_response
 from .models import Event
 
 
-# Create your views here.
-
-def event_list(request):
-    if request.method == 'OPTIONS':
-        return HttpResponse('', status=200)
-    if request.method == 'GET':
-        events = Event.objects.all()
-        serializer = EventSerializer(events, many=True)
-        return result_response(serializer.data)
-
-    if request.method == 'POST':
-        data = JSONParser().parse(request)
-        serializer = EventSerializer(data=data)
-        if serializer.is_valid():
-            serializer.save()
-            return result_response(serializer.data, status=201)
-        return result_response(serializer.errors, status=400)
+class EventList(generics.ListCreateAPIView):
+    queryset = Event.objects.all()
+    serializer_class = EventSerializer
 
 
-def event_detail(request, pk):
-    if request.method == 'OPTIONS':
-        return HttpResponse('', status=200)
-    try:
-        event = Event.objects.get(pk=pk)
-    except Event.DoesNotExist:
-        return HttpResponse(status=404)
+class EventDetail(mixins.RetrieveModelMixin,
+                  mixins.UpdateModelMixin,
+                  generics.GenericAPIView):
+    queryset = Event.objects.all()
+    serializer_class = EventSerializer
 
-    if request.method == 'GET':
-        serializer = EventSerializer(event)
-        return result_response(serializer.data)
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
 
-    elif request.method == 'PUT':
-        data = JSONParser().parse(request)
-        serializer = EventSerializer(event, data=data)
-        if serializer.is_valid():
-            serializer.save()
-            return result_response(serializer.data)
-        return result_response(serializer.errors, status=400)
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
 
 
 def vote(request, pk):
-    if request.method == 'OPTIONS':
-        return HttpResponse('', status=200)
     if request.method == 'POST':
         try:
             event = Event.objects.get(pk=pk)
@@ -63,4 +47,4 @@ def vote(request, pk):
             return result_response(serializer.data)
         return result_response(serializer.errors, status=400)
 
-    return HttpResponse(status=404)
+    return HttpResponse('', status=200)

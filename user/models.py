@@ -3,24 +3,23 @@ from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, yiban_uid, nickname):
-        if not yiban_uid:
+    def create_user(self, yiban_id, password):
+        if not yiban_id:
             raise ValueError("易班id不能为空")
 
         user = self.model(
-            login_id=yiban_uid,
-            nickname=nickname
+            login_id=yiban_id,
         )
 
-        user.set_password("Meiyouluanyong")
+        user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, login_id, nickname):
+    def create_superuser(self, yiban_id, password):
         user = self.create_user(
-            login_id,
-            nickname=nickname
+            yiban_id=yiban_id,
         )
+        user.set_password(password)
         user.is_admin = True
         user.save()
         return user

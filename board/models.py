@@ -15,7 +15,7 @@ class Event(models.Model):
 
     title = models.CharField(max_length=32, verbose_name="标题")
     content = models.TextField(default='', verbose_name="正文")
-    author = models.OneToOneField(User, on_delete=models.CASCADE, blank=None, null=True)
+    author = models.ForeignKey(User, related_name='events', on_delete=models.CASCADE, blank=None, null=True)
     event_type = models.SmallIntegerField(default=0)  # 0 Red 1 Black
     vote_count = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
@@ -35,7 +35,7 @@ class Vote(models.Model):
 
     event = models.ForeignKey(Event, on_delete=models.CASCADE, null=True, blank=True)
     vote = models.SmallIntegerField(default=1)
-    author = models.ForeignKey(User, on_delete=models.CASCADE, blank=None, null=True)
+    author = models.ForeignKey(User, related_name='votes', on_delete=models.CASCADE, blank=None, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

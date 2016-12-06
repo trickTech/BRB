@@ -1,8 +1,12 @@
 import json
 import binascii
 import logging
+
 from Crypto.Cipher import AES
 from django.contrib import auth
+from rest_framework import generics
+from rest_framework import mixins
+
 from brb.utils import (
     result_response,
     error_response,
@@ -12,11 +16,17 @@ from .user_const import (
     APPSECRET
 )
 from .models import User
+from .serializers import UserSerializer
 
 logger = logging.getLogger(__name__)
 
 
 # Create your views here.
+
+class UserList(generics.ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
 
 def auth_handler(request):
     if request.method == 'POST':
