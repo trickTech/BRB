@@ -1,21 +1,25 @@
-from django.http import HttpResponse, Http404
-
-from rest_framework import status
-from rest_framework.parsers import JSONParser
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework import mixins
 from rest_framework import generics
+from rest_framework import permissions
+from rest_framework import views
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework.reverse import reverse
 
 from board.serializers import EventSerializer, VoteSerializer
-from brb.utils import result_response
-from .models import Event
+
+from .models import Event, Vote
+from .permissions import IsOwnerOrReadOnly
 
 
 class EventList(generics.ListCreateAPIView):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
+
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
 
 class EventDetail(mixins.RetrieveModelMixin,
@@ -24,6 +28,8 @@ class EventDetail(mixins.RetrieveModelMixin,
     queryset = Event.objects.all()
     serializer_class = EventSerializer
 
+    permission_classes = (IsOwnerOrReadOnly,)
+
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
 
@@ -31,20 +37,8 @@ class EventDetail(mixins.RetrieveModelMixin,
         return self.update(request, *args, **kwargs)
 
 
-def vote(request, pk):
-    if request.method == 'POST':
-        try:
-            event = Event.objects.get(pk=pk)
-        except Event.DoesNotExist:
-            return HttpResponse(status=404)
+class VoteList(generics.CreateAPIView):
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
-        data = JSONParser().parse(request)
-        serializer = VoteSerializer(data=data)
-        if serializer.is_valid():
-            serializer.save()
-            event.vote += serializer.data.get('vote')
-            event.save()
-            return result_response(serializer.data)
-        return result_response(serializer.errors, status=400)
-
-    return HttpResponse('', status=200)
+    def perform_create(self, serializer):
+        pass

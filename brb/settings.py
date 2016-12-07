@@ -46,7 +46,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'brb.middleware.cross_site'
 ]
 
 ROOT_URLCONF = 'brb.urls'
@@ -114,6 +113,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Auth
 AUTH_USER_MODEL = 'user.User'
 
+REST_FRAMEWORK = {
+    'PAGE_SIZE': 10
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.10/topics/i18n/

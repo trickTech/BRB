@@ -30,6 +30,9 @@ class Vote(models.Model):
             ['event', 'vote'],
             ['event', 'created_at']
         ]
+        unique_together = (
+            ('event', 'author')
+        )
 
     VOTE_CHOICE = [-1, 0, 1]
 

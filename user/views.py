@@ -5,7 +5,7 @@ import logging
 from Crypto.Cipher import AES
 from django.contrib import auth
 from rest_framework import generics
-from rest_framework import mixins
+from rest_framework import permissions
 
 from brb.utils import (
     result_response,
@@ -26,6 +26,15 @@ logger = logging.getLogger(__name__)
 class UserList(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+
+class UserDetail(generics.RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
 
 def auth_handler(request):
