@@ -1,22 +1,24 @@
-import json
 import binascii
+import json
 import logging
 
 from Crypto.Cipher import AES
 from django.contrib import auth
 from rest_framework import generics
 from rest_framework import permissions
+from rest_framework.authentication import BasicAuthentication
 
+from brb.auth import CsrfExemptSessionAuthentication
 from brb.utils import (
     result_response,
     error_response,
 )
+from .models import User
+from .serializers import UserSerializer
 from .user_const import (
     APPID,
     APPSECRET
 )
-from .models import User
-from .serializers import UserSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +30,7 @@ class UserList(generics.ListAPIView):
     serializer_class = UserSerializer
 
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
 
 
 class UserDetail(generics.RetrieveAPIView):
@@ -36,12 +39,18 @@ class UserDetail(generics.RetrieveAPIView):
 
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+
 
 def auth_handler(request):
     if request.method == 'POST':
-        info = request.POST.get('verify_request')
+        try:
+            info = json.loads(request.data)['verify_request']
+        except Exception:
+            return error_response('verify_request not found in request', status=400)
+
         if info is None:
-            return error_response('data not valid')
+            return error_response('data not valid', status=400)
         try:
             info = _decode_access_token(info)
         except Exception as exc:
@@ -62,9 +71,15 @@ def auth_handler(request):
         if not user:
             user = User.objects.create(yiban_id=yiban_id, nickname=nickname, sex=usersex)
 
-        user = auth.login(request, user)
-        return result_response({'result': user})
+        auth.login(request, user)
+        return result_response({
+            'result': {
+                'yiban_id': user.yiban_id,
+                'nickname': user.nickname
+            }
+        })
         # return json_response({'status': 'success'})
+    return error_response({'detail': "method not allowed"}, status=405)
 
 
 def is_login(request):

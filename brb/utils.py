@@ -9,14 +9,13 @@ def json_response(data, status=200, **kwargs):
 
 
 def result_response(data, status=200, **kwargs):
-    data = {'status': 'success', 'result': data}
+    data = {'result': data}
     kwargs.pop('status', None)
-    return json_response(data, **kwargs)
+    return json_response(data, status, **kwargs)
 
 
-def error_response(error_info, status=500):
+def error_response(error_info, status=400):
     error_body = {
-        'status': 'fail',
         'result': error_info
     }
 
