@@ -45,7 +45,7 @@ class UserDetail(generics.RetrieveAPIView):
 def auth_handler(request):
     if request.method == 'POST':
         try:
-            info = json.loads(request.data)['verify_request']
+            info = json.loads(request.body.decode('utf-8'))['verify_request']
         except Exception:
             return error_response('verify_request not found in request', status=400)
 
@@ -73,18 +73,19 @@ def auth_handler(request):
 
         auth.login(request, user)
         return result_response({
-            'result': {
                 'yiban_id': user.yiban_id,
                 'nickname': user.nickname
-            }
         })
-        # return json_response({'status': 'success'})
-    return error_response({'detail': "method not allowed"}, status=405)
+    return error_response("method not allowed", status=405)
 
 
 def is_login(request):
-    result = request.user.is_authenticated()
-    return result_response({'is_login': result})
+    user = request.user
+    result = {'is_login': user.is_authenticated()}
+    if user.is_authenticated():
+        result['is_admin'] = user.is_admin
+
+    return result_response(result)
 
 
 def _decode_access_token(data):
@@ -101,7 +102,3 @@ def _decode_access_token(data):
         raise exc
 
     return origin_data
-
-
-def debug(request):
-    return result_response({'session': request.session})

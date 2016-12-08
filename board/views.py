@@ -5,7 +5,7 @@ from rest_framework import generics
 from rest_framework import permissions
 
 from rest_framework.authentication import BasicAuthentication
-from brb.utils import error_response
+from brb.utils import error_response, json_response
 from board.serializers import EventSerializer, VoteSerializer
 
 from .models import Event, Vote
@@ -44,10 +44,13 @@ class EventDetail(mixins.RetrieveModelMixin,
 def vote(request, pk):
     if request.method == 'POST':
         try:
-            info = json.loads(request.body)
-            vote_value = info['vote_value']
+            info = json.loads(request.body.decode())
+            vote_value = int(info['vote_value'])
         except Exception as exc:
-            return error_response({'bad request'}, status=400)
+            return error_response('bad request', status=400)
+
+        if vote_value not in [1, -1]:
+            return error_response('bad request', status=400)
 
         event = Event.objects.filter(pk=pk).first()
 
@@ -57,16 +60,17 @@ def vote(request, pk):
         vote = Vote.objects.filter(author=request.user, event=pk).first()
 
         if vote:
-            event -= vote.vote
-            event += vote_value
+            event.vote_count -= vote.vote
+            event.vote_count += vote_value
 
             vote.vote = vote_value
             event.save()
             vote.save()
         else:
-            event += vote_value
+            event.vote_count += vote_value
             vote = Vote.objects.create(author=request.user, event=event)
+            event.save()
 
-        return
+        return json_response({'event': pk, 'user': request.user.id, 'vote_value': vote_value})
 
-    return error_response({'detail': 'Method not allowed.'}, status=405)
+    return error_response('Method not allowed.', status=405)
