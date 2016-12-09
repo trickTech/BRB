@@ -18,6 +18,7 @@ class Event(models.Model):
     author = models.ForeignKey(User, related_name='events', on_delete=models.CASCADE, blank=None, null=True)
     event_type = models.SmallIntegerField(default=0)  # 0 Red 1 Black
     vote_count = models.IntegerField(default=0)
+    is_delete = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True, db_index=True)
 

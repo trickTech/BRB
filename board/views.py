@@ -1,9 +1,9 @@
 import json
-
+from rest_framework import status
 from rest_framework import mixins
 from rest_framework import generics
 from rest_framework import permissions
-
+from rest_framework.response import Response
 from rest_framework.authentication import BasicAuthentication
 from brb.utils import error_response, json_response
 from board.serializers import EventSerializer, VoteSerializer
@@ -26,6 +26,7 @@ class EventList(generics.ListCreateAPIView):
 
 class EventDetail(mixins.RetrieveModelMixin,
                   mixins.UpdateModelMixin,
+                  mixins.DestroyModelMixin,
                   generics.GenericAPIView):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
@@ -34,10 +35,20 @@ class EventDetail(mixins.RetrieveModelMixin,
     authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
 
     def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
+        instance = self.get_object()
+        if instance.is_delete:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
     def put(self, request, *args, **kwargs):
         return self.update(request, *args, **kwargs)
+
+    def perform_destroy(self, instance):
+        if self.request.user.is_admin:
+            instance.is_delete = True
+            instance.save()
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
 
 
 @login_required
@@ -47,15 +58,15 @@ def vote(request, pk):
             info = json.loads(request.body.decode())
             vote_value = int(info['vote_value'])
         except Exception as exc:
-            return error_response('bad request', status=400)
+            return error_response('bad request', status=status.HTTP_400_BAD_REQUEST)
 
         if vote_value not in [1, -1]:
-            return error_response('bad request', status=400)
+            return error_response('bad request', status=status.HTTP_400_BAD_REQUEST)
 
         event = Event.objects.filter(pk=pk).first()
 
         if not event:
-            return error_response('not found', status=404)
+            return error_response('not found', status=status.HTTP_404_NOT_FOUND)
 
         vote = Vote.objects.filter(author=request.user, event=pk).first()
 
@@ -73,4 +84,4 @@ def vote(request, pk):
 
         return json_response({'event': pk, 'user': request.user.id, 'vote_value': vote_value})
 
-    return error_response('Method not allowed.', status=405)
+    return error_response('Method not allowed.', status=status.HTTP_405_METHOD_NOT_ALLOWED)
