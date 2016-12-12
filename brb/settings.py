@@ -24,7 +24,7 @@ SECRET_KEY = '4f^#+)425ovh15i^a&8bsmnz!a!-&g082k5$gobs!2xmv*5_p4'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 INSTALLED_APPS = [
@@ -48,6 +48,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'brb.middleware.cross_site'
 ]
 
 ROOT_URLCONF = 'brb.urls'
