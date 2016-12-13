@@ -55,6 +55,7 @@ class EventDetail(mixins.RetrieveModelMixin,
 
 class VoteView(APIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
     def post(self, request, format=None, pk=None):
         pk = self.kwargs['pk']
         try:
@@ -72,8 +73,6 @@ class VoteView(APIView):
             return error_response('not found', status=status.HTTP_404_NOT_FOUND)
 
         vote = Vote.objects.filter(author=request.user, event=pk).first()
-
-        return error_response("test")
 
         if vote:
             event.vote_count -= vote.vote
