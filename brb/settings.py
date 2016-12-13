@@ -48,7 +48,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'brb.middleware.cross_site'
 ]
 
 ROOT_URLCONF = 'brb.urls'
@@ -147,3 +146,5 @@ CORS_ORIGIN_WHITELIST = (
     'localhost:8080',
     '127.0.0.1:9000'
 )
+
+CORS_ALLOW_CREDENTIALS = True
