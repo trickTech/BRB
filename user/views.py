@@ -7,6 +7,8 @@ from django.contrib import auth
 from rest_framework import generics
 from rest_framework import permissions
 from rest_framework.authentication import BasicAuthentication
+from rest_framework.views import APIView
+from rest_framework.response import Response
 
 from brb.auth import CsrfExemptSessionAuthentication
 from brb.utils import (
@@ -42,8 +44,8 @@ class UserDetail(generics.RetrieveAPIView):
     authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
 
 
-def auth_handler(request):
-    if request.method == 'POST':
+class Auth(APIView):
+    def post(self, request, format=None):
         try:
             info = json.loads(request.body.decode('utf-8'))['verify_request']
         except Exception:
@@ -73,19 +75,19 @@ def auth_handler(request):
 
         auth.login(request, user)
         return result_response({
-                'yiban_id': user.yiban_id,
-                'nickname': user.nickname
+            'yiban_id': user.yiban_id,
+            'nickname': user.nickname
         })
-    return error_response("method not allowed", status=405)
 
 
-def is_login(request):
-    user = request.user
-    result = {'is_login': user.is_authenticated()}
-    if user.is_authenticated():
-        result['is_admin'] = user.is_admin
+class IsLogin(APIView):
+    def get(self, request, format=None):
+        user = request.user
+        result = {'is_login': user.is_authenticated()}
+        if user.is_authenticated():
+            result['is_admin'] = user.is_admin
 
-    return result_response(result)
+        return result_response(result)
 
 
 def _decode_access_token(data):

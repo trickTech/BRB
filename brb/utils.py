@@ -1,5 +1,8 @@
 from django.http import HttpResponse
+
 from rest_framework.renderers import JSONRenderer
+from rest_framework.response import Response
+from rest_framework import serializers
 
 
 def json_response(data, status=200, **kwargs):
@@ -9,12 +12,12 @@ def json_response(data, status=200, **kwargs):
 
 
 def result_response(data, status=200, **kwargs):
-    return json_response(data, status, **kwargs)
+    return Response({'detail': data}, status=status, **kwargs)
 
 
 def error_response(error_info, status=400):
-    error_body = {
-        'detail': error_info
-    }
+    return result_response(error_info, status=status)
 
-    return json_response(error_body, status=status)
+
+class CommonSerializer(serializers.Serializer):
+    data = serializers.CharField(read_only=True)

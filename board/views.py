@@ -5,6 +5,8 @@ from rest_framework import generics
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.authentication import BasicAuthentication
+from rest_framework.views import APIView
+
 from brb.utils import error_response, json_response
 from board.serializers import EventSerializer, VoteSerializer
 
@@ -51,17 +53,18 @@ class EventDetail(mixins.RetrieveModelMixin,
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
 
-@login_required
-def vote(request, pk):
-    if request.method == 'POST':
+class VoteView(APIView):
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    def post(self, request, format=None, pk=None):
+        pk = self.kwargs['pk']
         try:
             info = json.loads(request.body.decode())
             vote_value = int(info['vote_value'])
         except Exception as exc:
-            return error_response('bad request', status=status.HTTP_400_BAD_REQUEST)
+            return error_response('bad request (bad json)', status=status.HTTP_400_BAD_REQUEST)
 
         if vote_value not in [1, -1]:
-            return error_response('bad request', status=status.HTTP_400_BAD_REQUEST)
+            return error_response('bad request (bad vote value)', status=status.HTTP_400_BAD_REQUEST)
 
         event = Event.objects.filter(pk=pk).first()
 
@@ -69,6 +72,8 @@ def vote(request, pk):
             return error_response('not found', status=status.HTTP_404_NOT_FOUND)
 
         vote = Vote.objects.filter(author=request.user, event=pk).first()
+
+        return error_response("test")
 
         if vote:
             event.vote_count -= vote.vote
@@ -83,5 +88,3 @@ def vote(request, pk):
             event.save()
 
         return json_response({'event': pk, 'user': request.user.id, 'vote_value': vote_value})
-
-    return error_response('Method not allowed.', status=status.HTTP_405_METHOD_NOT_ALLOWED)
