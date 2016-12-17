@@ -144,7 +144,8 @@ CORS_ORIGIN_WHITELIST = (
     'google.com',
     'hostname.example.com',
     'localhost:8080',
-    '127.0.0.1:9000'
+    '127.0.0.1:9000',
+    'zhangmengke.cn'
 )
 
 CORS_ALLOW_CREDENTIALS = True
