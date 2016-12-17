@@ -46,10 +46,14 @@ class EventDetail(mixins.RetrieveModelMixin,
     def put(self, request, *args, **kwargs):
         return self.update(request, *args, **kwargs)
 
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+
     def perform_destroy(self, instance):
         if self.request.user.is_admin:
             instance.is_delete = True
             instance.save()
+            return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
 
