@@ -3,7 +3,7 @@ class ViewSearchMixin(object):
     object_model = None
 
     def filter_queryset(self, queryset):
-        order = self.request.query_params.get('order', 'asc')
+        order = self.request.query_params.get('order', 'desc')
         orderby = self.request.query_params.get('orderby', 'created_at')
 
         for attr, value in self.request.query_params.items():
