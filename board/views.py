@@ -1,4 +1,5 @@
 import json
+
 from rest_framework import status
 from rest_framework import mixins
 from rest_framework import generics
@@ -7,17 +8,21 @@ from rest_framework.response import Response
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.views import APIView
 
+import django_filters.rest_framework
+
 from brb.utils import error_response, json_response
-from board.serializers import EventSerializer, VoteSerializer
-
-from .models import Event, Vote
-from .permissions import IsOwnerOrReadOnly, login_required
 from brb.auth import CsrfExemptSessionAuthentication
+from brb.mixins import ViewSearchMixin
+
+from board.serializers import EventSerializer
+from board.models import Event, Vote
+from board.permissions import IsOwnerOrReadOnly
 
 
-class EventList(generics.ListCreateAPIView):
+class EventList(ViewSearchMixin, generics.ListCreateAPIView):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
+    object_model = Event
 
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
