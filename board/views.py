@@ -64,6 +64,7 @@ class EventDetail(mixins.RetrieveModelMixin,
 
 class VoteView(APIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
 
     def post(self, request, format=None, pk=None):
         pk = self.kwargs['pk']
