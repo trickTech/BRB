@@ -15,7 +15,6 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
 
@@ -25,11 +24,9 @@ SECRET_KEY = '4f^#+)425ovh15i^a&8bsmnz!a!-&g082k5$gobs!2xmv*5_p4'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['*']
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -37,19 +34,24 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'board.apps.BoardConfig',
+    'user.apps.UserConfig',
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'brb.middleware.cors_middleware',
 ]
 
-ROOT_URLCONF = 'BRB.urls'
+ROOT_URLCONF = 'brb.urls'
 
 TEMPLATES = [
     {
@@ -67,11 +69,24 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'BRB.wsgi.application'
-
+WSGI_APPLICATION = 'brb.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.10/ref/settings/#databases
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'dev',
+#         'USER': 'eleme',
+#         'PASSWORD': 'eleme',
+#         'HOST': 'localhost',
+#         'PORT': '3306',
+#         'OPTIONS': {
+#             'sql_mode': 'traditional'
+#         }
+#     }
+# }
 
 DATABASES = {
     'default': {
@@ -79,7 +94,6 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/1.10/ref/settings/#auth-password-validators
@@ -99,6 +113,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Auth
+AUTH_USER_MODEL = 'user.User'
+
+REST_FRAMEWORK = {
+    'PAGE_SIZE': 10,
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.10/topics/i18n/
@@ -113,8 +133,21 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = "./static"
+
+# Cors
+
+CORS_ORIGIN_WHITELIST = (
+    'google.com',
+    'hostname.example.com',
+    'localhost:8080',
+    '127.0.0.1:9000',
+    'zhangmengke.cn',
+    'brb.zhangmengke.cn',
+)
+
+CORS_ALLOW_CREDENTIALS = True
