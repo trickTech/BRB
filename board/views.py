@@ -30,6 +30,35 @@ class EventList(ViewSearchMixin, generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+
+            event_list = serializer.data
+            for event in event_list:
+                event['vote_status'] = 0
+            event_map = {event['id']: index for index, event in enumerate(event_list)}
+
+            if request.user.is_authenticated():
+                vote_records = Vote.objects.values_list('event_id', 'vote').filter(
+                    event_id__in=event_map.keys(), author=request.user).all()
+                for vote in vote_records:
+                    index = event_map[vote[0]]
+                    event_list[index]['vote_status'] = vote[1]
+
+            # TODO has_vote
+            return self.get_paginated_response(event_list)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
 
 class EventDetail(mixins.RetrieveModelMixin,
                   mixins.UpdateModelMixin,
@@ -96,4 +125,8 @@ class VoteView(APIView):
             vote = Vote.objects.create(author=request.user, event=event)
             event.save()
 
-        return json_response({'event': pk, 'user': request.user.id, 'vote_value': vote_value})
+        return json_response(
+            {'event': pk,
+             'user': request.user.id,
+             'vote_value': vote_value,
+             'vote_count': event.vote_coute})
