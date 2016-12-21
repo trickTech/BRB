@@ -50,7 +50,6 @@ class EventList(ViewSearchMixin, generics.ListCreateAPIView):
                     index = event_map[vote[0]]
                     event_list[index]['vote_status'] = vote[1]
 
-            # TODO has_vote
             return self.get_paginated_response(event_list)
 
         serializer = self.get_serializer(queryset, many=True)
@@ -129,4 +128,4 @@ class VoteView(APIView):
             {'event': pk,
              'user': request.user.id,
              'vote_value': vote_value,
-             'vote_count': event.vote_coute})
+             'vote_count': event.vote_count})
